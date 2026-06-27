@@ -71,3 +71,22 @@ TEST_CASE("validation rejects a self-intersecting input") {
   auto r = calculate_min_homotopy_area(p, q);
   CHECK_FALSE(r.ok());
 }
+
+TEST_CASE("decomposition exposes one swept face for the unit square") {
+  Curve p = {P(0, 0), P(1, 0), P(1, 1)};
+  Curve q = {P(0, 0), P(0, 1), P(1, 1)};
+  auto d = decompose_min_homotopy_area(p, q);
+  REQUIRE(d.ok());
+  CHECK(d.value->area == doctest::Approx(1.0));
+  CHECK(d.value->swept.size() == 1);
+}
+
+TEST_CASE("decomposition yields one swept lobe per anchor split") {
+  // +,-,+ lobes -> two anchors -> three consistent sub-loops, one face each.
+  Curve p = {P(0, 0), P(4, 0)};
+  Curve q = {P(0, 0), P(1, 1), P(2, -1), P(3, 1), P(4, 0)};
+  auto d = decompose_min_homotopy_area(p, q);
+  REQUIRE(d.ok());
+  CHECK(d.value->area == doctest::Approx(2.0));
+  CHECK(d.value->swept.size() == 3);
+}

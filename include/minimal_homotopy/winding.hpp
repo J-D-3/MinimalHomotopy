@@ -8,6 +8,13 @@
 
 namespace mh {
 
+// One bounded face of an arrangement, with its winding number. `boundary` is the
+// face's outer ring (CCW), without a repeated closing point.
+struct FaceWinding {
+  Curve boundary;
+  int   winding = 0;
+};
+
 // Result of analysing one closed curve C (= a sub-loop P[a,b] ∘ rev(Q[a,b])).
 struct WindingAnalysis {
   // Σ |wn(face)| · area(face) over all bounded faces of the arrangement of C.
@@ -18,6 +25,10 @@ struct WindingAnalysis {
   // True iff every face has winding number ≥ 0, or every face has wn ≤ 0.
   // Inconsistent loops cannot be swept directly and must be split at an anchor.
   bool consistent = true;
+
+  // The bounded faces with non-zero winding number — the regions C actually
+  // sweeps. Used to render the swept area; empty faces (wn == 0) are omitted.
+  std::vector<FaceWinding> faces;
 };
 
 // Build the CGAL arrangement of the closed polyline `closed` (which must satisfy

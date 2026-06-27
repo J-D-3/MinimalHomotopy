@@ -74,6 +74,17 @@ double face_area(Arr::Face_handle f) {
   return a;
 }
 
+// The outer ring of a bounded face as a list of its vertices (no closing dup).
+Curve outer_ring(Arr::Halfedge_handle start) {
+  Curve ring;
+  Arr::Halfedge_handle h = start;
+  do {
+    ring.push_back(h->target()->point());
+    h = h->next();
+  } while (h != start);
+  return ring;
+}
+
 // Does half-edge `h` run in the same direction as the C-arc that induced it?
 // The two vectors are parallel by construction, so the sign of their dot
 // product is unambiguous (no floating-point knife's edge).
@@ -151,6 +162,7 @@ WindingAnalysis analyze_closed_curve(const Curve& closed) {
         sign = s;
       else if (sign != s)
         out.consistent = false;
+      out.faces.push_back({outer_ring(f->outer_ccb()), wn});
     }
     out.total_area += std::abs(wn) * face_area(f);
   }

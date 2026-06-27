@@ -82,19 +82,21 @@ Curve build_closed(const Curve& P, const Curve& Q, const Inter& A, const Inter& 
 
 } // namespace
 
-Result<double> calculate_min_homotopy_area(const Curve& P, const Curve& Q,
-                                           bool validate) {
+using Decomp = Result<HomotopyDecomposition>;
+
+Decomp decompose_min_homotopy_area(const Curve& P, const Curve& Q,
+                                   bool validate) {
   if (P.size() < 2 || Q.size() < 2)
-    return Result<double>::failure("Polylines must have at least 2 points.");
+    return Decomp::failure("Polylines must have at least 2 points.");
   // A curve is maximally similar to itself: no deformation, zero swept area.
   // (Handled up front because identical curves overlap everywhere, which the
   // transversal-intersection machinery below is not meant to process.)
-  if (P == Q) return Result<double>::success(0.0);
+  if (P == Q) return Decomp::success(HomotopyDecomposition{0.0, {}});
   if (!(P.front() == Q.front()) || !(P.back() == Q.back()))
-    return Result<double>::failure("P and Q must share start and end points.");
+    return Decomp::failure("P and Q must share start and end points.");
   if (validate) {
     auto v = validate_inputs(P, Q);
-    if (!v.ok()) return Result<double>::failure(v.error);
+    if (!v.ok()) return Decomp::failure(v.error);
   }
 
   // --- 1. Collect P∩Q intersections (brute force; predicates are exact). ----
@@ -106,7 +108,7 @@ Result<double> calculate_min_homotopy_area(const Curve& P, const Curve& Q,
       auto res = CGAL::intersection(sp, sq);
       if (!res) continue;
       if (held<Segment_2>(&*res))
-        return Result<double>::failure(
+        return Decomp::failure(
             "P and Q overlap collinearly (intersections must be transversal).");
       const Point_2* pt = held<Point_2>(&*res);
       if (!pt) continue;
@@ -150,14 +152,17 @@ Result<double> calculate_min_homotopy_area(const Curve& P, const Curve& Q,
   for (auto& x : X) x.q_rank = qrank[x.pt];
 
   if (X.size() < 2)
-    return Result<double>::failure(
+    return Decomp::failure(
         "Expected the shared endpoints as intersections; found fewer.");
 
   // --- 3. Dynamic program (Chambers/Wang 4.2). ------------------------------
-  // T[i] = optimal homotopy area between P[x0,xi] and Q[x0,xi].
+  // T[i] = optimal homotopy area between P[x0,xi] and Q[x0,xi]; prev[i] is the
+  // anchor j such that the last consistent sub-loop of that optimum is C[j,i]
+  // (prev[i] == 0 means the whole prefix C[0,i] is itself consistent).
   const double INF = std::numeric_limits<double>::infinity();
   const std::size_t last = X.size() - 1;
-  std::vector<double> T(X.size(), INF);
+  std::vector<double>      T(X.size(), INF);
+  std::vector<std::size_t> prev(X.size(), 0);
   T[0] = 0.0;
 
   for (std::size_t i = 1; i < X.size(); ++i) {
@@ -165,24 +170,45 @@ Result<double> calculate_min_homotopy_area(const Curve& P, const Curve& Q,
     auto whole = analyze_closed_curve(build_closed(P, Q, X[0], X[i]));
     if (whole.consistent) {
       T[i] = whole.total_area;
+      prev[i] = 0;
       continue;
     }
     // Otherwise split at the best valid anchor x_j (same order along P and Q,
     // with a consistent loop C[j,i]).
     double best = INF;
+    std::size_t arg = 0;
     for (std::size_t j = 1; j < i; ++j) {
       if (X[j].q_rank >= X[i].q_rank) continue;  // must keep order along Q
       if (!std::isfinite(T[j])) continue;
       auto part = analyze_closed_curve(build_closed(P, Q, X[j], X[i]));
       if (!part.consistent) continue;
-      best = std::min(best, part.total_area + T[j]);
+      if (part.total_area + T[j] < best) {
+        best = part.total_area + T[j];
+        arg = j;
+      }
     }
     T[i] = best;
+    prev[i] = arg;
   }
 
   if (!std::isfinite(T[last]))
-    return Result<double>::failure("No valid anchor decomposition found.");
-  return Result<double>::success(T[last]);
+    return Decomp::failure("No valid anchor decomposition found.");
+
+  // --- 4. Backtrack the chosen anchors and collect the swept faces. ---------
+  HomotopyDecomposition out;
+  out.area = T[last];
+  for (std::size_t i = last; i > 0; i = prev[i]) {
+    auto loop = analyze_closed_curve(build_closed(P, Q, X[prev[i]], X[i]));
+    for (auto& fw : loop.faces) out.swept.push_back(std::move(fw));
+  }
+  return Decomp::success(std::move(out));
+}
+
+Result<double> calculate_min_homotopy_area(const Curve& P, const Curve& Q,
+                                           bool validate) {
+  auto d = decompose_min_homotopy_area(P, Q, validate);
+  if (!d.ok()) return Result<double>::failure(d.error);
+  return Result<double>::success(d.value->area);
 }
 
 } // namespace mh
