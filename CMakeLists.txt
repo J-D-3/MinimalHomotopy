@@ -35,6 +35,13 @@ if(MSVC)
   target_compile_options(mh_svg PRIVATE /bigobj)
 endif()
 
+# Letter-recognition experiment (generates examples/letters/*.svg).
+add_executable(mh_letters apps/letters.cpp)
+target_link_libraries(mh_letters PRIVATE minimal_homotopy)
+if(MSVC)
+  target_compile_options(mh_letters PRIVATE /bigobj)
+endif()
+
 # ---- Tests ------------------------------------------------------------------
 enable_testing()
 find_package(doctest CONFIG REQUIRED)
