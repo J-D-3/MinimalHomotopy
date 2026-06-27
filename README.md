@@ -45,6 +45,20 @@ Quick try with the demo CLI (a unit square ⇒ area `1`):
 printf "3\n0 0\n1 0\n1 1\n3\n0 0\n0 1\n1 1\n" | ./build/mh_cli
 ```
 
+## Seeing it
+
+`mh_svg` takes the same input and draws the two curves in distinct colours with the swept minimal
+homotopy area hatched between them:
+
+```sh
+printf "2\n0 0\n3 0\n4\n0 0\n1 1\n2 -1\n3 0\n" | ./build/mh_svg > out.svg
+```
+
+Pre-rendered samples live in [`examples/`](examples/) — e.g. a zig-zag whose homotopy splits into five
+hatched triangles:
+
+![zig-zag example](examples/zigzag6.svg)
+
 ## Using it from code
 
 ```cpp

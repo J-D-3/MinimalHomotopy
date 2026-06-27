@@ -13,6 +13,7 @@ add_library(minimal_homotopy
   src/curve.cpp
   src/winding.cpp
   src/homotopy_area.cpp
+  src/svg.cpp
 )
 target_include_directories(minimal_homotopy
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -24,9 +25,15 @@ if(MSVC)
   target_compile_options(minimal_homotopy PRIVATE /bigobj)
 endif()
 
-# ---- Demo CLI ---------------------------------------------------------------
+# ---- Demo CLIs --------------------------------------------------------------
 add_executable(mh_cli apps/main.cpp)
 target_link_libraries(mh_cli PRIVATE minimal_homotopy)
+
+add_executable(mh_svg apps/svg_main.cpp)
+target_link_libraries(mh_svg PRIVATE minimal_homotopy)
+if(MSVC)
+  target_compile_options(mh_svg PRIVATE /bigobj)
+endif()
 
 # ---- Tests ------------------------------------------------------------------
 enable_testing()

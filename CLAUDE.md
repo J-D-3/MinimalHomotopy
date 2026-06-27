@@ -33,6 +33,8 @@ ctest --test-dir build --output-on-failure   # run all tests
   (on Windows the binary is under `build/Release/mh_tests.exe` for the VS generator).
 - **List test cases:** `./build/mh_tests --list-test-cases`
 - **Demo CLI:** `printf "3\n0 0\n1 0\n1 1\n3\n0 0\n0 1\n1 1\n" | ./build/mh_cli` → prints `1`.
+- **SVG CLI:** same stdin format, emits an SVG of the two curves with the swept area hatched:
+  `... | ./build/mh_svg > out.svg`. Pre-rendered samples are in [`examples/`](examples/).
 
 If MSVC fails with "too many sections", the CGAL arrangement headers need `/bigobj` — it is already
 set on the library and test targets in [`CMakeLists.txt`](CMakeLists.txt); add it to any new target
@@ -48,10 +50,13 @@ Everything is under namespace `mh`. Headers in `include/minimal_homotopy/`, sour
 | [`result.hpp`](include/minimal_homotopy/result.hpp) | `Result<T>` — tiny value-or-error type (the C++17 stand-in for the old `fplus::result`). |
 | [`curve.{hpp,cpp}`](include/minimal_homotopy/curve.hpp) | Input validation: simple-polyline test and the three Chambers/Wang restrictions. |
 | [`winding.{hpp,cpp}`](include/minimal_homotopy/winding.hpp) | **The CGAL core.** `analyze_closed_curve` builds the arrangement of one closed loop and returns `Σ|wn|·area` plus a consistency flag. |
-| [`homotopy_area.{hpp,cpp}`](include/minimal_homotopy/homotopy_area.hpp) | Public API `calculate_min_homotopy_area(P, Q)`: finds P∩Q intersections and runs the anchor-point DP. |
+| [`homotopy_area.{hpp,cpp}`](include/minimal_homotopy/homotopy_area.hpp) | Public API `calculate_min_homotopy_area(P, Q)` and `decompose_min_homotopy_area(P, Q)`: finds P∩Q intersections and runs the anchor-point DP. |
+| [`svg.{hpp,cpp}`](include/minimal_homotopy/svg.hpp) | `render_svg(P, Q, decomp)` — draws P/Q in distinct colours with the swept area hatched. |
 
 Data flow: `calculate_min_homotopy_area` → finds & orders the intersections → for each candidate
 sub-loop `C[i,j]` calls `analyze_closed_curve` → fills the DP table `T[i]` → returns `T[last]`.
+`decompose_min_homotopy_area` runs the same DP but keeps parent pointers, then backtracks the chosen
+anchors and gathers each consistent sub-loop's swept faces (`WindingAnalysis::faces`) for rendering.
 
 ### Key design decisions (read before changing the core)
 
