@@ -27,3 +27,8 @@
 *.exe
 *.out
 *.app
+
+# CMake / vcpkg build output
+/build/
+vcpkg_installed/
+CMakeUserPresets.json

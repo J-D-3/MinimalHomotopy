@@ -1,0 +1,23 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 20, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "vcpkg (Windows)",
+      "description": "Configures against the local vcpkg toolchain at C:/Repositories/vcpkg.",
+      "binaryDir": "${sourceDir}/build",
+      "toolchainFile": "C:/Repositories/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "default", "configurePreset": "default", "configuration": "Release" }
+  ],
+  "testPresets": [
+    { "name": "default", "configurePreset": "default", "configuration": "Release",
+      "output": { "outputOnFailure": true } }
+  ]
+}

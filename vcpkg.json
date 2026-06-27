@@ -1,0 +1,9 @@
+{
+  "name": "minimal-homotopy",
+  "version": "0.1.0",
+  "description": "Curve similarity via minimal homotopy area (Chambers/Wang 2013), built on CGAL.",
+  "dependencies": [
+    "cgal",
+    "doctest"
+  ]
+}
