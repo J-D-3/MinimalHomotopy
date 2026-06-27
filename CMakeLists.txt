@@ -35,6 +35,7 @@ add_executable(mh_tests
   test/test_main.cpp
   test/test_winding.cpp
   test/test_homotopy_area.cpp
+  test/test_stress.cpp
 )
 target_link_libraries(mh_tests PRIVATE minimal_homotopy doctest::doctest)
 if(MSVC)
