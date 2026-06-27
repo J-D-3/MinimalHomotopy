@@ -4,22 +4,25 @@
 
 #pragma once
 
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
 #include <vector>
 
 namespace mh {
 
 // The one and only place the CGAL kernel is named.
 //
-// EPICK = Exact_predicates_inexact_constructions_kernel: geometric *decisions*
-// (do two segments cross? which side of a line is a point on?) are exact, while
-// *constructed* values (intersection points, areas) are ordinary doubles. That
-// makes the arrangement topology robust while keeping arithmetic fast.
+// EPECK = Exact_predicates_exact_constructions_kernel: both geometric
+// *decisions* (do two segments cross? which side of a line is a point on?) and
+// *constructed* values (intersection points, areas) are exact. Intersection
+// points built from different segment pairs are therefore bit-identical, so we
+// can compare and deduplicate them exactly — no tolerance fudge.
 //
-// If area sums ever look unstable on near-degenerate inputs, switch this single
-// typedef to CGAL::Exact_predicates_exact_constructions_kernel (EPECK) — the
-// rest of the code is written kernel-agnostic and needs no other change.
-using Kernel    = CGAL::Exact_predicates_inexact_constructions_kernel;
+// EPECK trades speed for that exactness (its FT is a lazy exact number). If a
+// future use needs raw throughput over exact areas, switch this single typedef
+// to CGAL::Exact_predicates_inexact_constructions_kernel (EPICK) — the rest of
+// the code is written kernel-agnostic. (Under EPICK, restore a tolerance in the
+// intersection dedup in homotopy_area.cpp, which currently assumes exactness.)
+using Kernel    = CGAL::Exact_predicates_exact_constructions_kernel;
 using Point_2   = Kernel::Point_2;
 using Segment_2 = Kernel::Segment_2;
 

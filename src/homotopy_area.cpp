@@ -11,11 +11,11 @@
 #include "minimal_homotopy/winding.hpp"
 
 #include <CGAL/intersections.h>
+#include <CGAL/squared_distance_2.h>
 #include <CGAL/version.h>
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
 #include <limits>
 #include <map>
 #include <tuple>
@@ -25,14 +25,24 @@
 namespace mh {
 namespace {
 
-// One intersection point of P and Q, with where it sits along each curve.
+// One intersection point of P and Q, with where it sits along each curve. The
+// position keys are exact squared distances from the segment start (monotone
+// along the segment), so ordering is exact under EPECK.
 struct Inter {
   Point_2     pt;
-  std::size_t p_seg = 0;  // index of the P-segment it lies on, + param along it
-  double      p_t   = 0.0;
-  std::size_t q_seg = 0;  // index of the Q-segment it lies on, + param along it
-  double      q_t   = 0.0;
-  std::size_t q_rank = 0; // order of this point along Q (0 = Q's start)
+  std::size_t p_seg = 0;            // P-segment it lies on ...
+  Kernel::FT  p_key = Kernel::FT(0); // ... and squared distance from P[p_seg]
+  std::size_t q_seg = 0;            // Q-segment it lies on ...
+  Kernel::FT  q_key = Kernel::FT(0); // ... and squared distance from Q[q_seg]
+  std::size_t q_rank = 0;           // order of this point along Q (0 = Q's start)
+};
+
+// Exact lexicographic order on points; lets us dedup/key intersections with no
+// tolerance (valid because EPECK constructs coincident points bit-identically).
+struct PointLess {
+  bool operator()(const Point_2& a, const Point_2& b) const {
+    return a.x() < b.x() || (a.x() == b.x() && a.y() < b.y());
+  }
 };
 
 template <class T, class Variant>
@@ -42,26 +52,6 @@ const T* held(const Variant* v) {
 #else
   return boost::get<T>(v);
 #endif
-}
-
-// Parameter of x along segment a->b, in [0,1] for points on the segment. Only
-// used to order coincident-segment intersections, so inexact arithmetic is fine.
-double seg_param(const Point_2& a, const Point_2& b, const Point_2& x) {
-  const double dx = CGAL::to_double(b.x() - a.x());
-  const double dy = CGAL::to_double(b.y() - a.y());
-  const double len2 = dx * dx + dy * dy;
-  if (len2 <= 0.0) return 0.0;
-  const double px = CGAL::to_double(x.x() - a.x());
-  const double py = CGAL::to_double(x.y() - a.y());
-  return (px * dx + py * dy) / len2;
-}
-
-// Quantised coordinate key, used to deduplicate intersection points that were
-// constructed (in floating point) from different segment pairs. This tolerance
-// is the price of the EPICK kernel; switching to EPECK would make it exact.
-std::pair<std::int64_t, std::int64_t> coord_key(const Point_2& p) {
-  auto r = [](double v) { return static_cast<std::int64_t>(std::llround(v * 1e7)); };
-  return {r(CGAL::to_double(p.x())), r(CGAL::to_double(p.y()))};
 }
 
 // Sub-polyline of `poly` from intersection A to intersection B (A before B).
@@ -124,22 +114,21 @@ Result<double> calculate_min_homotopy_area(const Curve& P, const Curve& Q,
       it.pt = *pt;
       it.p_seg = a;
       it.q_seg = b;
-      it.p_t = seg_param(P[a], P[a + 1], *pt);
-      it.q_t = seg_param(Q[b], Q[b + 1], *pt);
+      it.p_key = CGAL::squared_distance(P[a], *pt);
+      it.q_key = CGAL::squared_distance(Q[b], *pt);
       raw.push_back(it);
     }
   }
 
   // --- 2. Deduplicate, then order along P and along Q. ----------------------
-  std::map<std::pair<std::int64_t, std::int64_t>, Inter> uniq;
+  std::map<Point_2, Inter, PointLess> uniq;
   for (const auto& it : raw) {
-    auto key = coord_key(it.pt);
-    auto f = uniq.find(key);
+    auto f = uniq.find(it.pt);
     if (f == uniq.end())
-      uniq.emplace(key, it);
-    else if (std::tie(it.p_seg, it.p_t) <
-             std::tie(f->second.p_seg, f->second.p_t))
-      f->second = it;  // keep the lowest (p_seg, p_t) representative
+      uniq.emplace(it.pt, it);
+    else if (std::tie(it.p_seg, it.p_key) <
+             std::tie(f->second.p_seg, f->second.p_key))
+      f->second = it;  // keep the lowest (p_seg, p_key) representative
   }
 
   std::vector<Inter> X;
@@ -148,17 +137,17 @@ Result<double> calculate_min_homotopy_area(const Curve& P, const Curve& Q,
 
   // Order along P (this becomes the index of each point in the DP).
   std::sort(X.begin(), X.end(), [](const Inter& a, const Inter& b) {
-    return std::tie(a.p_seg, a.p_t) < std::tie(b.p_seg, b.p_t);
+    return std::tie(a.p_seg, a.p_key) < std::tie(b.p_seg, b.p_key);
   });
 
-  // Order along Q -> q_rank, looked up by point key.
+  // Order along Q -> q_rank, looked up by point.
   std::vector<Inter> byq = X;
   std::sort(byq.begin(), byq.end(), [](const Inter& a, const Inter& b) {
-    return std::tie(a.q_seg, a.q_t) < std::tie(b.q_seg, b.q_t);
+    return std::tie(a.q_seg, a.q_key) < std::tie(b.q_seg, b.q_key);
   });
-  std::map<std::pair<std::int64_t, std::int64_t>, std::size_t> qrank;
-  for (std::size_t i = 0; i < byq.size(); ++i) qrank[coord_key(byq[i].pt)] = i;
-  for (auto& x : X) x.q_rank = qrank[coord_key(x.pt)];
+  std::map<Point_2, std::size_t, PointLess> qrank;
+  for (std::size_t i = 0; i < byq.size(); ++i) qrank[byq[i].pt] = i;
+  for (auto& x : X) x.q_rank = qrank[x.pt];
 
   if (X.size() < 2)
     return Result<double>::failure(

@@ -55,18 +55,19 @@ sub-loop `C[i,j]` calls `analyze_closed_curve` → fills the DP table `T[i]` →
 
 ### Key design decisions (read before changing the core)
 
-- **Kernel = EPICK** (`Exact_predicates_inexact_constructions_kernel`). Geometric *decisions* are
-  exact (robust arrangement topology); constructed *values* (intersection points, areas) are
-  `double`. The whole codebase is kernel-agnostic — to get exact areas too, change the one typedef in
-  `kernel.hpp` to EPECK and nothing else.
+- **Kernel = EPECK** (`Exact_predicates_exact_constructions_kernel`). Both geometric *decisions*
+  (robust arrangement topology) and constructed *values* (intersection points, areas) are exact. The
+  whole codebase is kernel-agnostic — for raw speed over exact areas, change the one typedef in
+  `kernel.hpp` to EPICK (and restore a tolerance in the `homotopy_area.cpp` dedup; see below).
 - **Winding numbers by flood-fill, not ray casting.** `winding.cpp` seeds the unbounded face with
   `wn = 0` and propagates: two faces sharing an edge differ by exactly 1, with the face to the *left*
   of C's direction being higher. Direction is recovered exactly via `Arr_curve_data_traits_2`, which
   tags each curve with its segment index so the data survives edge splitting. This replaces the
   old floating-point angle-summation (`winding_number`) and its epsilon hacks entirely.
-- **EPICK consequence:** intersection points constructed from different segment pairs may not be
-  bit-identical, so `homotopy_area.cpp` deduplicates them on a quantised coordinate key (`1e-7`). If
-  you ever switch to EPECK, that dedup can become exact.
+- **Exact dedup.** Intersection points constructed from different segment pairs are bit-identical
+  under EPECK, so `homotopy_area.cpp` deduplicates and orders them by exact point comparison
+  (`PointLess`) and exact along-segment position (squared distance), with no tolerance. Under EPICK
+  this must revert to a quantised coordinate key.
 
 ### Mapping to the old stump (now removed)
 
