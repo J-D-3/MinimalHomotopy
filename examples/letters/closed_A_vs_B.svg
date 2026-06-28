@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680.00" height="676.82" viewBox="0 0 680.00 676.82" font-family="sans-serif">
+  <defs>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#2a9d8f" stroke-width="1.4"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="white"/>
+  <polygon points="401.298,40 335.802,46.3052 460.017,291.247 626.741,185.196" fill="url(#hatch)" fill-opacity="0.55" stroke="#2a9d8f" stroke-width="1" stroke-opacity="0.6"/>
+  <polygon points="460.017,291.247 395.689,332.165 518.969,407.495" fill="url(#hatch)" fill-opacity="0.55" stroke="#2a9d8f" stroke-width="1" stroke-opacity="0.6"/>
+  <polygon points="518.969,407.495 578.555,524.995 640,481.452" fill="url(#hatch)" fill-opacity="0.55" stroke="#2a9d8f" stroke-width="1" stroke-opacity="0.6"/>
+  <polygon points="578.555,524.995 425.797,633.247 326.752,634.2 633.935,634.2" fill="url(#hatch)" fill-opacity="0.55" stroke="#2a9d8f" stroke-width="1" stroke-opacity="0.6"/>
+  <polygon points="91.988,634.2 311.715,46.3052 40,40 54.6859,636.818 326.752,634.2" fill="url(#hatch)" fill-opacity="0.55" stroke="#2a9d8f" stroke-width="1" stroke-opacity="0.6"/>
+  <polyline points="311.715,46.3052 91.988,634.2 633.935,634.2 335.802,46.3052" fill="none" stroke="#1f77b4" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <polyline points="311.715,46.3052 40,40 54.6859,636.818 425.797,633.247 640,481.452 395.689,332.165 626.741,185.196 401.298,40 335.802,46.3052" fill="none" stroke="#e4572e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="311.72" cy="46.31" r="4" fill="#333"/>
+  <circle cx="335.80" cy="46.31" r="4" fill="#333"/>
+  <text x="40.00" y="662.82" font-size="14" fill="#1f77b4">P</text>
+  <text x="58.00" y="662.82" font-size="14" fill="#e4572e">Q</text>
+  <text x="80.00" y="662.82" font-size="14" fill="#1d6f64">minimal homotopy area = 4021.74</text>
+</svg>

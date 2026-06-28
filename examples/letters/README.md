@@ -47,8 +47,40 @@ nearest-neighbour rule mislabels the distorted Z as an **S**.
 |---|---|
 | ![Z vs Z extreme](failure_same_Z_distorted.svg) | ![Z vs S](failure_diff_Z_S.svg) |
 
-**Takeaway.** Minimal homotopy area is a faithful *geometric* distance between two strokes, and it
-recognises letters well as long as inter-letter shape differences dominate intra-letter (font)
-variation. It is not by itself a font-invariant letter classifier: once a font deforms a glyph by
-more area than separates it from another letter, the ranking flips. (It also only compares strokes
-that share endpoints and is blind to stroke direction beyond those endpoints.)
+## Closed glyphs — O, A, B
+
+The algorithm compares **open** curves with **distinct** shared endpoints, so a true closed loop
+(`start == end`) does not fit directly: the two endpoints would collapse to one point and the
+dynamic program would only cover part of the glyph. Instead each closed letter is traced as a single
+**near-closed stroke with a small pen gap at the top** — start just left of top, go all the way
+around the silhouette, end just right of top. The endpoints `(48,100)`/`(52,100)` are distinct and
+shared, the stroke stays simple, and it covers the whole letter. (Internal counters — the holes of
+A, B, O — are not represented; these are silhouette outlines. O, A, B form their own group: they
+cannot be compared with the TL→BR open glyphs above, which use different endpoints.)
+
+| | same letter | vs O | vs A | vs B |
+|---|---:|---:|---:|---:|
+| **O** | **1828** | – | 4112 | 2901 |
+| **A** | **1659** | 4112 | – | 4022 |
+| **B** | **2287** | 2901 | 4022 | – |
+
+Every letter's nearest neighbour is itself, so all three are recognised. The margin is tighter than
+for the open glyphs — O and B are the most confusable pair (2901, two rounded silhouettes) — but
+same-letter still wins.
+
+| same letter O (area 1828) | O vs B, the closest pair (area 2901) |
+|---|---|
+| ![O vs O](closed_same_O.svg) | ![O vs B](closed_O_vs_B.svg) |
+
+| O vs A (area 4112) | A vs B (area 4022) |
+|---|---|
+| ![O vs A](closed_O_vs_A.svg) | ![A vs B](closed_A_vs_B.svg) |
+
+## Takeaway
+
+Minimal homotopy area is a faithful *geometric* distance between two strokes, and it recognises
+letters — open and closed alike — as long as inter-letter shape differences dominate intra-letter
+(font) variation. It is not by itself a font-invariant letter classifier: once a font deforms a glyph
+by more area than separates it from another letter, the ranking flips. (It also only compares strokes
+that share endpoints, is blind to stroke direction beyond those endpoints, and treats closed letters
+as silhouette outlines.)

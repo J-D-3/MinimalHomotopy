@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680.00" height="626.33" viewBox="0 0 680.00 626.33" font-family="sans-serif">
+  <defs>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#2a9d8f" stroke-width="1.4"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="white"/>
+  <polygon points="583.386,153.636 350.847,40 552.181,164.994 582.342,321.664 530.116,476.736 371.163,552.189 380.771,556.655 605.451,449.317 640,300.678" fill="url(#hatch)" fill-opacity="0.55" stroke="#2a9d8f" stroke-width="1" stroke-opacity="0.6"/>
+  <polygon points="149.884,449.317 97.6584,300.678 127.819,153.636 329.153,40 96.6143,164.994 40,321.664 74.5494,476.736 299.229,586.334 371.163,552.189" fill="url(#hatch)" fill-opacity="0.55" stroke="#2a9d8f" stroke-width="1" stroke-opacity="0.6"/>
+  <polyline points="329.153,40 127.819,153.636 97.6584,300.678 149.884,449.317 380.771,556.655 605.451,449.317 640,300.678 583.386,153.636 350.847,40" fill="none" stroke="#1f77b4" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <polyline points="329.153,40 96.6143,164.994 40,321.664 74.5494,476.736 299.229,586.334 530.116,476.736 582.342,321.664 552.181,164.994 350.847,40" fill="none" stroke="#e4572e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="329.15" cy="40.00" r="4" fill="#333"/>
+  <circle cx="350.85" cy="40.00" r="4" fill="#333"/>
+  <text x="40.00" y="612.33" font-size="14" fill="#1f77b4">P</text>
+  <text x="58.00" y="612.33" font-size="14" fill="#e4572e">Q</text>
+  <text x="80.00" y="612.33" font-size="14" fill="#1d6f64">minimal homotopy area = 1828.41</text>
+</svg>

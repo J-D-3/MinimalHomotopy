@@ -62,11 +62,20 @@ void write_svg(const std::string& path, const Curve& p, const Curve& q) {
 int main(int argc, char** argv) {
   const std::string dir = (argc > 1) ? argv[1] : "examples/letters";
 
-  // Base glyphs: single strokes from TL (0,100) to BR (100,0).
+  // --- Open glyphs: single strokes from TL (0,100) to BR (100,0). -----------
   const Curve L = {Pt(0, 100), Pt(0, 0), Pt(100, 0)};            // down then right
   const Curve seven = {Pt(0, 100), Pt(100, 100), Pt(100, 0)};   // right then down
   const Curve Z = {Pt(0, 100), Pt(100, 100), Pt(0, 0), Pt(100, 0)};
   const Curve S = {Pt(0, 100), Pt(75, 80), Pt(25, 55), Pt(75, 30), Pt(100, 0)};
+
+  // --- Closed glyphs: each letter's silhouette traced as one near-closed
+  // stroke with a small pen gap at the top, so the endpoints (48,100)/(52,100)
+  // are distinct and shared across O, A, B. ----------------------------------
+  const Curve O = {Pt(48, 100), Pt(8, 78), Pt(0, 50), Pt(8, 22), Pt(50, 2),
+                   Pt(92, 22), Pt(100, 50), Pt(92, 78), Pt(52, 100)};
+  const Curve Av = {Pt(48, 100), Pt(5, 0), Pt(95, 0), Pt(52, 100)};  // triangle
+  const Curve Bv = {Pt(48, 100), Pt(0, 100), Pt(0, 0), Pt(60, 0), Pt(95, 25),
+                    Pt(55, 50), Pt(95, 75), Pt(60, 100), Pt(52, 100)};
 
   const double A = 8, B = -8, BIG = 78;  // two normal fonts + one extreme font
 
@@ -83,10 +92,23 @@ int main(int argc, char** argv) {
   std::cout << "extreme font:\n";
   std::cout << "  Z(A) vs Z(BIG): " << area(font(Z, A), font(Z, BIG)) << "\n";
 
+  std::cout << "\nclosed glyphs O/A/B (silhouettes, shared top endpoints):\n";
+  std::cout << "  same O: " << area(font(O, A), font(O, B)) << "\n";
+  std::cout << "  same A: " << area(font(Av, A), font(Av, B)) << "\n";
+  std::cout << "  same B: " << area(font(Bv, A), font(Bv, B)) << "\n";
+  std::cout << "  O vs A: " << area(font(O, A), font(Av, A)) << "\n";
+  std::cout << "  O vs B: " << area(font(O, A), font(Bv, A)) << "\n";
+  std::cout << "  A vs B: " << area(font(Av, A), font(Bv, A)) << "\n";
+
   // Narrative images.
   write_svg(dir + "/success_same_L.svg", font(L, A), font(L, B));
   write_svg(dir + "/success_diff_L_7.svg", font(L, A), font(seven, A));
   write_svg(dir + "/failure_diff_Z_S.svg", font(Z, A), font(S, A));
   write_svg(dir + "/failure_same_Z_distorted.svg", font(Z, A), font(Z, BIG));
+
+  write_svg(dir + "/closed_same_O.svg", font(O, A), font(O, B));
+  write_svg(dir + "/closed_O_vs_A.svg", font(O, A), font(Av, A));
+  write_svg(dir + "/closed_O_vs_B.svg", font(O, A), font(Bv, A));
+  write_svg(dir + "/closed_A_vs_B.svg", font(Av, A), font(Bv, A));
   return 0;
 }
