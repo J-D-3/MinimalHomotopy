@@ -1,4 +1,4 @@
-# MinimalHomotopy (UNDER CONSTRUCTION)
+# MinimalHomotopy
 
 A **C++** library that measures how similar two curves are by computing the **minimal homotopy
 area** — the smallest area you must sweep to continuously deform one curve into the other. Small area
@@ -70,6 +70,19 @@ auto result = mh::calculate_min_homotopy_area(P, Q);
 if (result.ok()) std::cout << *result << "\n";   // 1
 else             std::cerr << result.error << "\n";
 ```
+
+## Status (v0.1)
+
+Implements the **planar case** for two open polylines that share their endpoints: exact (EPECK)
+arrangement, winding numbers, the anchor-point dynamic program, SVG rendering, and a test suite.
+Known limitations, none blocking for this measure:
+
+- Validation rejects collinear *overlaps* but does not fully detect tangential touch-but-not-cross
+  contacts; inputs are assumed transversal beyond that.
+- The exact kernel makes area sums robust but costs more on inputs with very many intersections (the
+  DP builds `O(I²)` arrangements); see `kernel.hpp` to swap to the faster inexact kernel.
+- Closed letters in the [letter experiment](examples/letters/) are compared as silhouette outlines;
+  the true cycle case (paper Appendix D) is not implemented.
 
 ## License
 
